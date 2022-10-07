@@ -7,7 +7,7 @@ constexpr uint16_t pulse_length = 53; // 5.25us with 10Mhz clock divide
 //constexpr uint16_t pulse_length = 420; // 5.25us with 80Mhz clock divide
 
 rmt_config_t rmt_tx;
-rmt_item32_t rmt_values[5];
+rmt_item32_t rmt_values[10];
 
 bool send_rmt(uint16_t bin)
 {
@@ -20,7 +20,15 @@ bool send_rmt(uint16_t bin)
         rmt_values[i].duration0 = pulse_length;
         rmt_values[i].duration1 = pulse_length;
     }
-    return rmt_write_items(rmt_channel, rmt_values, 5, 1);
+    for(uint16_t i = 5; i < 10; ++i)
+    {
+        rmt_values[i].level0 = 0;
+        rmt_values[i].level1 = 0;
+        rmt_values[i].duration0 = pulse_length;
+        rmt_values[i].duration1 = pulse_length;
+    }
+   
+    return rmt_write_items(rmt_channel, rmt_values, 10, 1);
 }
 
 void setup() {
@@ -51,36 +59,36 @@ void loop() {
   delay(5000);
   Serial.println("sending");
   // resetTypewriter
-  send_rmt(~0b1001000010);
-  send_rmt(~0b0000000000);
-  send_rmt(~0b1001000010);
-  send_rmt(~0b0000000010);
-  send_rmt(~0b0001000000);
-  send_rmt(~0b1001000010);
-  send_rmt(~0b0000010010);
-  send_rmt(~0b0000000000);
-  send_rmt(~0b1001000010);
-  send_rmt(~0b0000011010);
-  send_rmt(~0b0000100100);
-  send_rmt(~0b1001000010);
-  send_rmt(~0b0000001100);
-  send_rmt(~0b0100000000);
-  send_rmt(~0b0000000000);
-  send_rmt(~0b1001000010);
-  send_rmt(~0b0000011010);
-  send_rmt(~0b0000010010);
-  send_rmt(~0b1001000010);
-  send_rmt(~0b0000001100);
-  send_rmt(~0b0100000000);
-  send_rmt(~0b0000000000);
-  send_rmt(~0b1001000010);
-  send_rmt(~0b0000010100);
-  send_rmt(~0b0000000000);
-  send_rmt(~0b1001000010);
-  send_rmt(~0b0000001110);
-  send_rmt(~0b1001000010);
-  send_rmt(~0b0000011000);
-  send_rmt(~0b0000000010);
+  //send_rmt(~0b1001000010);
+  //send_rmt(~0b0000000000);
+  //send_rmt(~0b1001000010);
+  //send_rmt(~0b0000000010);
+  //send_rmt(~0b0001000000);
+  //send_rmt(~0b1001000010);
+  //send_rmt(~0b0000010010);
+  //send_rmt(~0b0000000000);
+  //send_rmt(~0b1001000010);
+  //send_rmt(~0b0000011010);
+  //send_rmt(~0b0000100100);
+  //send_rmt(~0b1001000010);
+  //send_rmt(~0b0000001100);
+  //send_rmt(~0b0100000000);
+  //send_rmt(~0b0000000000);
+  //send_rmt(~0b1001000010);
+  //send_rmt(~0b0000011010);
+  //send_rmt(~0b0000010010);
+  //send_rmt(~0b1001000010);
+  //send_rmt(~0b0000001100);
+  //send_rmt(~0b0100000000);
+  //send_rmt(~0b0000000000);
+  //send_rmt(~0b1001000010);
+  //send_rmt(~0b0000010100);
+  //send_rmt(~0b0000000000);
+  //send_rmt(~0b1001000010);
+  //send_rmt(~0b0000001110);
+  //send_rmt(~0b1001000010);
+  //send_rmt(~0b0000011000);
+  //send_rmt(~0b0000000010);
   // send_letter
   send_rmt(~0b1001000010);
   send_rmt(~0b0000010110);
