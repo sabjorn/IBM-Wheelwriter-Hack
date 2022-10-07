@@ -3,123 +3,24 @@
 #include "soc/rmt_reg.h"
 
 constexpr rmt_channel_t rmt_channel = static_cast<rmt_channel_t>(0);
-constexpr uint16_t pulse_length = 52; // 525; // 5.25us with 1Mhz clock divide
+constexpr uint16_t pulse_length = 53; // 5.25us with 10Mhz clock divide
+//constexpr uint16_t pulse_length = 420; // 5.25us with 80Mhz clock divide
 
 rmt_config_t rmt_tx;
-rmt_item32_t rmt_values[20];
+rmt_item32_t rmt_values[5];
 
-void send_rmt() //uint8_t data[], uint8_t lengthOfData)
+bool send_rmt(uint16_t bin)
 {
-    // remember, all are inverted
-    //sendByte(0b1001000010);
-    //sendByte(0b0000000110);
-    //auto a = 0x20 == sendByte(asciiTrans[*s++]);
-    //sendByte(0b0000010100); // full space
-    // fast text 
+    for(uint16_t i = 0; i < 5; ++i)
+    {
+        auto step = i * 2;
 
-    // 0b0110111101 :: lsb
-    rmt_values[0].duration0 = pulse_length;
-    rmt_values[0].level0 = 1;
-    rmt_values[0].duration1 = pulse_length;
-    rmt_values[0].level1 = 0;
-
-    rmt_values[1].duration0 = pulse_length;
-    rmt_values[1].level0 = 1;
-    rmt_values[1].duration1 = pulse_length;
-    rmt_values[1].level1 = 1;
-
-    rmt_values[2].duration0 = pulse_length;
-    rmt_values[2].level0 = 1;
-    rmt_values[2].duration1 = pulse_length;
-    rmt_values[2].level1 = 1;
-
-    rmt_values[3].duration0 = pulse_length;
-    rmt_values[3].level0 = 0;
-    rmt_values[3].duration1 = pulse_length;
-    rmt_values[3].level1 = 1;
-
-    rmt_values[4].duration0 = pulse_length;
-    rmt_values[4].level0 = 1;
-    rmt_values[4].duration1 = pulse_length;
-    rmt_values[4].level1 = 0;
-    
-    // 0b1111111001 :: lsb
-    rmt_values[5].duration0 = pulse_length;
-    rmt_values[5].level0 = 1;
-    rmt_values[5].duration1 = pulse_length;
-    rmt_values[5].level1 = 0;
-
-    rmt_values[6].duration0 = pulse_length;
-    rmt_values[6].level0 = 0;
-    rmt_values[6].duration1 = pulse_length;
-    rmt_values[6].level1 = 1;
-
-    rmt_values[7].duration0 = pulse_length;
-    rmt_values[7].level0 = 1;
-    rmt_values[7].duration1 = pulse_length;
-    rmt_values[7].level1 = 1;
-
-    rmt_values[8].duration0 = pulse_length;
-    rmt_values[8].level0 = 1;
-    rmt_values[8].duration1 = pulse_length;
-    rmt_values[8].level1 = 1;
-
-    rmt_values[9].duration0 = pulse_length;
-    rmt_values[9].level0 = 1;
-    rmt_values[9].duration1 = pulse_length;
-    rmt_values[9].level1 = 1;
-
-    // 0x20 + low = 1110111111
-    rmt_values[10].duration0 = pulse_length;
-    rmt_values[10].level0 = 1;
-    rmt_values[10].duration1 = pulse_length;
-    rmt_values[10].level1 = 1;
-
-    rmt_values[11].duration0 = pulse_length;
-    rmt_values[11].level0 = 1;
-    rmt_values[11].duration1 = pulse_length;
-    rmt_values[11].level1 = 1;
-
-    rmt_values[12].duration0 = pulse_length;
-    rmt_values[12].level0 = 1;
-    rmt_values[12].duration1 = pulse_length;
-    rmt_values[12].level1 = 1;
-
-    rmt_values[13].duration0 = pulse_length;
-    rmt_values[13].level0 = 0;
-    rmt_values[13].duration1 = pulse_length;
-    rmt_values[13].level1 = 1;
-
-    rmt_values[14].duration0 = pulse_length;
-    rmt_values[14].level0 = 1;
-    rmt_values[14].duration1 = pulse_length;
-    rmt_values[14].level1 = 1;
-
-    // 0b1111101011 -- lsb
-    rmt_values[15].duration0 = pulse_length;
-    rmt_values[15].level0 = 1;
-    rmt_values[15].duration1 = pulse_length;
-    rmt_values[15].level1 = 1;
-
-    rmt_values[16].duration0 = pulse_length;
-    rmt_values[16].level0 = 0;
-    rmt_values[16].duration1 = pulse_length;
-    rmt_values[16].level1 = 1;
-
-    rmt_values[17].duration0 = pulse_length;
-    rmt_values[17].level0 = 0;
-    rmt_values[17].duration1 = pulse_length;
-    rmt_values[17].level1 = 1;
-
-    rmt_values[18].duration0 = pulse_length;
-    rmt_values[18].level0 = 1;
-    rmt_values[18].duration1 = pulse_length;
-    rmt_values[18].level1 = 1;
-
-    rmt_values[19].duration0 = pulse_length;
-    rmt_values[19].level0 = 1;
-    rmt_values[19].duration1 = pulse_length;
-    rmt_values[19].level1 = 1;
+        rmt_values[i].level0 = (bin >> step) & 0x1;
+        rmt_values[i].level1 = (bin >> (step + 1)) & 0x1;
+        rmt_values[i].duration0 = pulse_length;
+        rmt_values[i].duration1 = pulse_length;
+    }
+    return rmt_write_items(rmt_channel, rmt_values, 5, 1);
 }
 
 void setup() {
@@ -139,8 +40,6 @@ void setup() {
     rmt_tx.tx_config.carrier_freq_hz = 38000;
     rmt_tx.tx_config.carrier_level   = RMT_CARRIER_LEVEL_HIGH;
 
-    send_rmt();
-
     rmt_config(&rmt_tx);
     rmt_driver_install(rmt_tx.channel, 0, 0);
 
@@ -149,7 +48,81 @@ void setup() {
 }
 
 void loop() {
-  // put your main code here, to run repeatedly:
-  Serial.println(rmt_write_items(rmt_channel, rmt_values, 20, 1));
   delay(5000);
+  Serial.println("sending");
+  // resetTypewriter
+  send_rmt(~0b1001000010);
+  send_rmt(~0b0000000000);
+  send_rmt(~0b1001000010);
+  send_rmt(~0b0000000010);
+  send_rmt(~0b0001000000);
+  send_rmt(~0b1001000010);
+  send_rmt(~0b0000010010);
+  send_rmt(~0b0000000000);
+  send_rmt(~0b1001000010);
+  send_rmt(~0b0000011010);
+  send_rmt(~0b0000100100);
+  send_rmt(~0b1001000010);
+  send_rmt(~0b0000001100);
+  send_rmt(~0b0100000000);
+  send_rmt(~0b0000000000);
+  send_rmt(~0b1001000010);
+  send_rmt(~0b0000011010);
+  send_rmt(~0b0000010010);
+  send_rmt(~0b1001000010);
+  send_rmt(~0b0000001100);
+  send_rmt(~0b0100000000);
+  send_rmt(~0b0000000000);
+  send_rmt(~0b1001000010);
+  send_rmt(~0b0000010100);
+  send_rmt(~0b0000000000);
+  send_rmt(~0b1001000010);
+  send_rmt(~0b0000001110);
+  send_rmt(~0b1001000010);
+  send_rmt(~0b0000011000);
+  send_rmt(~0b0000000010);
+  // send_letter
+  send_rmt(~0b1001000010);
+  send_rmt(~0b0000010110);
+  send_rmt(~0b1001000010);
+  send_rmt(~0b0000000110);
+  send_rmt(~0b0000010100);
+  send_rmt(~0b0000010100); // spacing for one character
+  //// fastTextInit
+  //send_rmt(~0b1001000010);
+  //send_rmt(~0b0000010110);
+  //send_rmt(~0b1001000010);
+  //send_rmt(~0b0000010010);
+  //send_rmt(~0b0000000000);
+  //send_rmt(~0b1001000010);
+  //send_rmt(~0b0000010100);
+  //send_rmt(~0b0000000000);
+  //send_rmt(~0b1001000010);
+  //send_rmt(~0b0000011010);
+  //send_rmt(~0b0000001100);
+  //send_rmt(~0b1001000010);
+  //send_rmt(~0b0000001100);
+  //send_rmt(~0b0100000000);
+  //send_rmt(~0b0000000000);
+  //send_rmt(~0b1001000010);
+  //send_rmt(~0b0000001010);
+  //send_rmt(~0b0100000000);
+  //send_rmt(~0b1001000010);
+  //send_rmt(~0b0000011010);
+  //send_rmt(~0b0000100100);
+  //send_rmt(~0b1001000010);
+  //send_rmt(~0b0000001100);
+  //send_rmt(~0b0100000000);
+  //send_rmt(~0b0000000000);
+
+  //// fastTextChars
+  //send_rmt(~0b1001000010);
+  //send_rmt(~0b0000000110);
+  ////send_rmt(~0b0001000000); // 'A'
+  //send_rmt(~0b0000010100); // full space
+
+  //// fastTextFinish
+  //send_rmt(~0b1001000010);
+  //send_rmt(~0b0000010010);
+  //send_rmt(~0b0000000000);
 }
