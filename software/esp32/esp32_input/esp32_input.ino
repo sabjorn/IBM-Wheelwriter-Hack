@@ -4,7 +4,7 @@
 
 constexpr size_t num_elements = 6;
 constexpr rmt_channel_t rmt_channel = static_cast<rmt_channel_t>(1);
-constexpr uint16_t pulse_length = 52; // 5.25us with 10Mhz clock divide
+constexpr uint16_t pulse_length = 53; // 5.25us with 10Mhz clock divide
 //constexpr uint16_t pulse_length = 420; // 5.25us with 80Mhz clock divide
 unsigned long time_now = 0;
 
@@ -42,7 +42,7 @@ void setup() {
 
     rmt_rx.channel       = rmt_channel;
     rmt_rx.gpio_num      = GPIO_NUM_22;
-    rmt_rx.clk_div       = 8; // 1 Mhz, .1us, we can force time length below;
+    rmt_rx.clk_div       = 80; // 1 Mhz, .1us, we can force time length below;
     rmt_rx.mem_block_num = 2;
     rmt_rx.rmt_mode      = RMT_MODE_RX;
     rmt_rx.rx_config.idle_threshold = 1024;
@@ -50,7 +50,7 @@ void setup() {
     rmt_rx.rx_config.filter_ticks_thresh = 0;
 
     rmt_config(&rmt_rx);
-    rmt_driver_install(rmt_rx.channel, 1000, 0);
+    rmt_driver_install(rmt_rx.channel, 2048, 0);
 
     // start the channel
     rmt_rx_start(rmt_channel, true);
@@ -71,19 +71,20 @@ void loop() {
     items = (rmt_item32_t*) xRingbufferReceive(rb, &rx_size, 8);
     if(items)
     {
-        Serial.print("\n");
         for ( i=0; i < rx_size / 4; i++ )
         {
-            Serial.print(items[i].level0);
-            Serial.print(" ");
-            Serial.print(items[i].duration0 / 53);
-            Serial.print(" ");
-            Serial.print(items[i].level0);
-            Serial.print(" ");
-            Serial.print(items[i].duration1 / 53);
-            Serial.print(" ");
+            Serial.print("{");
+            Serial.print("\"state0\": ");
+            Serial.print((items[i].level0) ? "\"high\"" : "\"low\"");
+            Serial.print(", \"duration0\": ");
+            Serial.print(items[i].duration0);
+            Serial.print(", \"state1\": ");
+            Serial.print((items[i].level1) ? "\"high\"" : "\"low\"");
+            Serial.print(", \"duration1\": ");
+            Serial.print(items[i].duration1);
+            Serial.println("}");
         }
-        Serial.print("\n");
+        //Serial.print("\r\n");
         vRingbufferReturnItem(rb, (void*) items);
     }        
 }
