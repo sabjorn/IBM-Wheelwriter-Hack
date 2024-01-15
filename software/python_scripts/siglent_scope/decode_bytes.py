@@ -43,13 +43,13 @@ edges = edges - signal_start_offset
 
 grid_steps = int(len(vals) // bit_interval)
 
-plt.plot(np.arange(len(times)),vals)
-for edge in edges:
-    plt.axvline(x=edge, color='r')
-    
-for t in range(0, grid_steps):
-    plt.axvline(x=edges[0] + (t*bit_interval), color='black', alpha=0.1)
-plt.show()
+#plt.plot(np.arange(len(times)),vals)
+#for edge in edges:
+#    plt.axvline(x=edge, color='r')
+#    
+#for t in range(0, grid_steps):
+#    plt.axvline(x=edges[0] + (t*bit_interval), color='black', alpha=0.1)
+#plt.show()
 
 t_edges = times[edges]
 bits = np.ceil(np.diff(t_edges) / bit_period)
@@ -61,4 +61,49 @@ for b in bits:
         all_bits += [0] * int(b)
         continue
     all_bits += [1] * int(b)
- 
+
+#all_bits = [1] + all_bits # needed for lower to function
+state = "start_frame"
+offset = 0 
+messages = {}
+for i in range(len(all_bits)):
+    position = i + offset
+
+    if position > len(all_bits):
+        break
+
+    b = all_bits[position]
+    if state == "open":
+        if b == 1 and all_bits[position + 1] == 0:
+           state = "start_frame"
+           continue
+
+    if state == "start_frame":
+        messages[position] = all_bits[position : position + 10]
+        offset += 10 
+        state = "open"
+        continue
+
+def _join_bytes(b: list[int]) -> str:
+    if len(b) < 10:
+        b+=[1]
+    return ''.join([str(e) for e in b])
+
+MESSAGE_MAP = {
+        _join_bytes([0, 1, 0, 0, 0, 0, 1, 0, 0, 1]) : "START",
+        _join_bytes([0, 0, 0, 0, 0, 0, 0, 0, 0, 0]) : "BLANK",
+        _join_bytes([0, 1, 1, 0, 1, 0, 0, 0, 0, 0]) : "LINE 336 -- send_letter -- after START",
+        _join_bytes([0, 0, 0, 1, 1, 0, 0, 0, 0, 0]) : "LINE 456",
+        _join_bytes([0, 0, 0, 1, 0, 0, 0, 0, 0, 0]) : "LINE 375 -- comes before letter?",
+        _join_bytes([0, 0, 1, 1, 0, 0, 0, 1, 0, 0]) : "LETTER? -- a?",
+        _join_bytes([0, 0, 1, 1, 1, 0, 1, 1, 0, 0]) : "AFTER LETTER?--not in doc",
+        _join_bytes([0, 1, 1, 0, 0, 0, 0, 0, 0, 0]) : "LINE 338 (in function called send_letter)",
+        _join_bytes([0, 1, 0, 0, 0, 0, 0, 0, 0, 0]) : "LINE 140 -- actual letter 'a'",
+        _join_bytes([0, 0, 1, 0, 1, 0, 0, 0, 0, 0]) : "LINE 340 -- send_letter -- happens after 'letter'",
+}
+print("all lines referencing: beanWheelwriterControlWemos.ino")
+for position, message in messages.items():
+    message_type = MESSAGE_MAP.get(_join_bytes(message), "UNKNOWN")
+    message.reverse()
+    m_string=_join_bytes(message)
+    print(f"{m_string} : start_position: {position} : {message_type}")
